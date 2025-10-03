@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => env('AUTH_GUARD', 'api'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'partners'),
     ],
 
     /*
@@ -36,10 +36,22 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'api' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'partners',
         ],
+        // 'traveler' => [
+        //     'driver' => 'session',
+        //     'provider' => 'travelers',
+        // ],
+        // 'rider' => [
+        //     'driver' => 'session',
+        //     'provider' => 'riders',
+        // ],
+        // 'partner' => [
+        //     'driver' => 'session',
+        //     'provider' => 'partners',
+        // ],
     ],
 
     /*
@@ -60,9 +72,21 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        // 'users' => [
+        //     'driver' => 'eloquent',
+        //     'model' => env('AUTH_MODEL', App\Models\User::class),
+        // ],
+        // 'travelers' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\Traveler::class,
+        // ],
+        // 'riders' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\Rider::class,
+        // ],
+        'partners' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\Partner::class,
         ],
 
         // 'users' => [
@@ -91,8 +115,8 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
+        'partners' => [
+            'provider' => 'partners',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
