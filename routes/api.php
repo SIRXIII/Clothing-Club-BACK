@@ -61,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('states', [DashboardController::class, 'getStates']);
         Route::get('travelers', [DashboardController::class, 'travelersOverview']);
         Route::get('topPartners', [DashboardController::class, 'topPartners']);
+        Route::get('/orders/queue', [DashboardController::class, 'queue']);
+         Route::get('/notifications/latest', [DashboardController::class, 'latestAlert']);
     });
     // Travelers
     Route::get('/travelers', [TravelerController::class, 'index']);
@@ -91,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products
     Route::apiResource('/products', ProductController::class);
     Route::post('/products/status-update', [ProductController::class, 'statusUpdate']);
+    Route::post('products/bulk-delete', [ProductController::class, 'bulkDelete']);
 
 
     // Orders
@@ -106,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/support-tickets', [SupportTicketController::class, 'store']);
 
     Route::post('/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
+    Route::post('/support/check-or-create', [SupportTicketController::class, 'checkOrCreate']);
 
 
 
@@ -113,8 +117,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/support-tickets/messages', [SupportMessageController::class, 'store']);
 
+
      Route::post('/profile/update', [LoginController::class, 'updateProfile']);
     Route::post('/user/update-password', [LoginController::class, 'updatePassword']);
+
+
+
+    // Route::post('/products', [ProductController::class, 'store']);
+
 });
 
 

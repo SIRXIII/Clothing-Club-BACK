@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('weight')->nullable();
             $table->string('sku')->nullable();
             $table->integer('stock')->default(0);
+            $table->string('barcode')->nullable();
 
 
             $table->enum('type', ['rental', 'formal'])->default('rental');
@@ -37,28 +38,29 @@ return new class extends Migration
             $table->decimal('deposit', 10, 2)->nullable();
             $table->decimal('late_fee', 10, 2)->nullable();
             $table->decimal('replacement_value', 10, 2)->nullable();
-            $table->string('extensions')->nullable();
+            $table->string('extensions_price')->nullable();
+            $table->string('keep_to_buy_price')->nullable();
 
             $table->string('prep_buffer')->nullable();
-            $table->string('min_rental')->nullable();
-            $table->string('max_rental')->nullable();
+            $table->string('min_rental_period')->nullable();
+            $table->string('max_rental_period')->nullable();
             $table->date('blackout_date')->nullable();
 
 
             $table->string('location')->nullable();
 
             $table->string('fit_category')->nullable();
-            $table->enum('length_unit', ['cm', 'inch'])->default('cm');
+            $table->enum('unit', ['cm', 'inch'])->default('cm');
             $table->string('length')->nullable();
             $table->string('chest')->nullable();
             $table->string('sleeve')->nullable();
 
 
             $table->string('condition_grade')->nullable();
-            // $table->string('status')->nullable();
-            $table->enum('status', ['active', 'suspended', 'pending'])->default('pending');
-
+            $table->string('product_availibity')->nullable();
             $table->text('note')->nullable();
+
+            $table->enum('status', ['active', 'suspended', 'pending'])->default('pending');
             $table->boolean('is_verified')->default(false)->nullable();
             $table->foreign('partner_id')->references('id')->on('partners')->onDelete('cascade');
 

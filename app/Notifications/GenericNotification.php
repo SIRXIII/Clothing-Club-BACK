@@ -56,6 +56,7 @@ class GenericNotification extends Notification implements ShouldQueue
     {
         return $this->toArray($notifiable);
     }
+    
 
     /**
      * Get the boradcast representation of the notification.

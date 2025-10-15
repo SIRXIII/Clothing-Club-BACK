@@ -6,5 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVideo extends Model
 {
-    //
+    protected $guarded = [];
+    
 }

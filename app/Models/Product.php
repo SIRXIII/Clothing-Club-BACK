@@ -61,8 +61,19 @@ class Product extends Model
         return $this->rentals()->where('status', 'cancelled');
     }
     public function getVerificationStatusAttribute()
-{
-    return $this->is_verified ? 'Verified' : 'Pending Verification';
-}
+    {
+        return $this->is_verified ? 'Verified' : 'Pending Verification';
+    }
 
+
+    //    public function getReviewsCountAttribute()
+    // {
+    //     return $this->ratings()->count();
+    // }
+
+
+    //     public function getAverageRatingAttribute()
+    // {
+    //     return $this->ratings()->avg('rating') ? round($this->ratings()->avg('rating'), 1) : null;
+    // }
 }
