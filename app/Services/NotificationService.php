@@ -8,7 +8,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Notifications\GenericNotification;
 use Illuminate\Support\Collection;
-
+use Illuminate\Support\Str;
 class NotificationService
 {
     /**
@@ -109,11 +109,13 @@ class NotificationService
             $r->id === $sender->id && get_class($r) === $senderClass
         );
 
+          $shortMessage = Str::limit(strip_tags($message->message ?? ''), 80);
+
         foreach ($recipients as $recipient) {
             if (method_exists($recipient, 'notify')) {
                 $recipient->notify(new GenericNotification(
                     'New Support Message',
-                    "A new message was sent in ticket #{$ticket->id}",
+                     "{$shortMessage}",
                     "/support/chatsupport/{$ticket->id}",
                     'message'
                 ));
