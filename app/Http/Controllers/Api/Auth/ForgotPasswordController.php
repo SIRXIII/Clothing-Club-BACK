@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\ResetPasswordMail;
 use App\Models\User;
+use App\Models\Partner;
 use App\Trait\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,10 +23,10 @@ class ForgotPasswordController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email'
+            'email' => 'required|email|exists:partners,email'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = Partner::where('email', $request->email)->first();
 
         if (!$user) {
             return $this->error('User not found', null, 404);
@@ -64,7 +65,7 @@ class ForgotPasswordController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email|exists:partners,email',
             'token' => 'required|string',
             'password' => 'required|string|min:8|confirmed'
         ]);
@@ -89,7 +90,7 @@ class ForgotPasswordController extends Controller
         }
 
         // Update user password
-        $user = User::where('email', $request->email)->first();
+        $user = Partner::where('email', $request->email)->first();
         $user->update([
             'password' => Hash::make($request->password)
         ]);

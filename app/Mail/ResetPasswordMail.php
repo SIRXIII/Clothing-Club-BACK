@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Models\Partner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -19,12 +20,13 @@ class ResetPasswordMail extends Mailable
 
     /**
      * Create a new message instance.
+     * Accept both User and Partner models
      */
-    public function __construct(User $user, string $token)
+    public function __construct(User|Partner $user, string $token)
     {
         $this->user = $user;
         $this->token = $token;
-        $this->resetUrl = env('FRONTEND_URL', 'https://travelclothingclub-admin.online') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        $this->resetUrl = env('FRONTEND_URL', 'https://travelclothingclub.com') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
     }
 
     /**
