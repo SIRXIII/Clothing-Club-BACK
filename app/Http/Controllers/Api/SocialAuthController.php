@@ -47,7 +47,7 @@ class SocialAuthController extends Controller
                 }
             }
 
-            // Handle other providers (Google, Apple)
+            // Handle other providers (Google, Facebook)
             $driver = Socialite::driver($provider)->stateless();
             return $driver->redirect();
         } catch (\Exception $e) {
@@ -68,7 +68,7 @@ class SocialAuthController extends Controller
                 $shopifyService = new ShopifyOAuthService();
                 $socialUser = $shopifyService->handleCallback($request);
             } else {
-                // Handle other providers (Google, Apple)
+                // Handle other providers (Google, Facebook)
                 $socialUser = Socialite::driver($provider)->stateless()->user();
             }
 
@@ -278,7 +278,7 @@ class SocialAuthController extends Controller
      */
     private function validateProvider($provider)
     {
-        $allowedProviders = ['google', 'apple', 'shopify'];
+        $allowedProviders = ['google', 'facebook', 'shopify'];
 
         if (!in_array($provider, $allowedProviders)) {
             abort(422, 'Invalid social provider');
@@ -324,9 +324,9 @@ class SocialAuthController extends Controller
                     'name' => 'Google',
                     'enabled' => !empty(config('services.google.client_id')),
                 ],
-                'apple' => [
-                    'name' => 'Apple',
-                    'enabled' => !empty(config('services.apple.client_id')),
+                'facebook' => [
+                    'name' => 'Facebook',
+                    'enabled' => !empty(config('services.facebook.client_id')),
                 ],
                 'shopify' => [
                     'name' => 'Shopify',

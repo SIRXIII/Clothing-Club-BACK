@@ -36,16 +36,31 @@
         .button {
             display: inline-block;
             background-color: #F77F00;
-            color: white;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 5px;
+            color: white !important;
+            padding: 15px 40px;
+            text-decoration: none !important;
+            border-radius: 8px;
             font-weight: bold;
             text-align: center;
             margin: 20px 0;
+            font-size: 16px;
         }
         .button:hover {
             background-color: #e66f00;
+        }
+        .link-box {
+            word-break: break-all;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 13px;
+            color: #495057;
+            margin: 15px 0;
+        }
+        .link-box a {
+            color: #F77F00;
+            text-decoration: none;
         }
         .footer {
             text-align: center;
@@ -77,14 +92,14 @@
             
             <p>We received a request to reset your password for your Travel Clothing Club Partner account. If you made this request, click the button below to reset your password:</p>
             
-            <div style="text-align: center;">
-                <a href="{{ $resetUrl }}" class="button" style="color: white;">Reset Password</a>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ $resetUrl }}" class="button" style="color: white !important; text-decoration: none;">Reset Password</a>
             </div>
             
-            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px;">
-                {{ $resetUrl }}
-            </p>
+            <p style="margin-top: 30px; margin-bottom: 10px;">If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <div class="link-box">
+                <a href="{{ $resetUrl }}" style="color: #F77F00; word-wrap: break-word;">{{ $resetUrl }}</a>
+            </div>
             
             <div class="warning">
                 <strong>Important:</strong> This password reset link will expire in 24 hours for security reasons.
