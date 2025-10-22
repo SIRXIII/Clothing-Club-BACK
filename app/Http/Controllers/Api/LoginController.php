@@ -104,7 +104,7 @@ class LoginController extends Controller
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([
-            'user_id'       => 'required|exists:users,id',
+            'user_id'       => 'required|exists:partners,id',
             'oldpassword'   => 'required|string',
             'newpassword'   => 'required|string|min:6',
             'confirmpassword' => 'required|string|same:newpassword',
