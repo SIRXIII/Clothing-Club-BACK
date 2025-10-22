@@ -15,25 +15,12 @@ class Partner extends  Authenticatable
     use HasFactory, SoftDeletes, HasApiTokens, Notifiable;
     use TwoFactorAuthenticatable;
 
-    protected $fillable = [
-
-        'profile_photo',
-        'name',
-        'business_name',
-        'email',
-        'phone',
-        'category',
-        'location',
-        'address',
-        // 'documents',
-        'username',
-        'password',
-        'status',
-        'average_rating',
-        'store_available_days',
-        'store_available_time',
-        'tax_id',
-    ];
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = ['id'];
 
     protected $hidden = [
         'password',
