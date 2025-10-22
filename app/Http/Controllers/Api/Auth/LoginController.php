@@ -83,7 +83,7 @@ class LoginController extends Controller
             return $this->error('Expired login attempt', null, 422);
         }
 
-        $user = User::find($attempt['user_id']);
+        $user = Partner::find($attempt['user_id']);
 
         if (!$user) {
             return $this->error('User not found', null, 404);
@@ -118,7 +118,7 @@ class LoginController extends Controller
 
         return $this->success([
             'verified' => true,
-            'user'     => new UserResource($user),
+            'user'     => new PartnerResource($user),
             'token'    => $token
         ], 'Login successful', 200);
     }
