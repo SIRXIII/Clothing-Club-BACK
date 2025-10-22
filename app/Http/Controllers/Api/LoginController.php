@@ -103,26 +103,50 @@ class LoginController extends Controller
 
     public function updatePassword(Request $request)
     {
-        $validated = $request->validate([
-            'user_id'       => 'required|exists:partners,id',
-            'oldpassword'   => 'required|string',
-            'newpassword'   => 'required|string|min:6',
-            'confirmpassword' => 'required|string|same:newpassword',
-        ]);
-
-        $user = Partner::findOrFail($validated['user_id']);
-
-
-        if (!Hash::check($validated['oldpassword'], $user->password)) {
-            return response()->json(['status' => 'error', 'message' => 'Old password is incorrect'], 422);
+        // Find user first to check if they have a password
+        $user = Partner::find($request->user_id);
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'User not found'
+            ], 404);
         }
 
+        // Check if user has an existing password (regular login) or not (OAuth login)
+        $hasPassword = !empty($user->password);
+
+        // Validation rules based on whether user has password or not
+        $rules = [
+            'user_id'       => 'required|exists:partners,id',
+            'newpassword'   => 'required|string|min:6',
+            'confirmpassword' => 'required|string|same:newpassword',
+        ];
+
+        // Only require old password if user already has a password
+        if ($hasPassword) {
+            $rules['oldpassword'] = 'required|string';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Verify old password only if user has an existing password
+        if ($hasPassword) {
+            if (!Hash::check($validated['oldpassword'], $user->password)) {
+                return response()->json([
+                    'status' => 'error', 
+                    'message' => 'Old password is incorrect'
+                ], 422);
+            }
+        }
+
+        // Update password
         $user->password = Hash::make($validated['newpassword']);
         $user->save();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Password updated successfully',
+            'message' => $hasPassword ? 'Password updated successfully' : 'Password set successfully',
             'user' => new PartnerResource($user),
         ]);
     }
