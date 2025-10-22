@@ -7,6 +7,7 @@ use App\Http\Resources\SupportMessageResource;
 use App\Http\Resources\SupportTicketResource;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Services\NotificationService;
 use App\Trait\ApiResponse;
 use Illuminate\Http\Request;
 
@@ -42,7 +43,7 @@ class SupportMessageController extends Controller
 
 
 
-    public function store(Request $request)
+    public function store(Request $request, NotificationService $notify)
     {
 
 
@@ -54,10 +55,14 @@ class SupportMessageController extends Controller
         ]);
 
         broadcast(new SupportMessageSent($message))->toOthers();
-        //  broadcast(new SupportMessageSent(new SupportMessageResource($message)))->toOthers();
+
+
+         $notify->notifyMessageSent($message);
 
         return $this->success($message, 'Message sent successfully', 201);
     }
+
+
 
     public function fetchMessages($ticketId)
     {
