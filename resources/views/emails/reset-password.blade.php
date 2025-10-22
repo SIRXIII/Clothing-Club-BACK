@@ -73,16 +73,16 @@
         </div>
 
         <div class="content">
-            <p>Hello {{ $user->first_name ?? 'Admin' }},</p>
+            <p>Hello {{ $user->name ?? 'Partner' }},</p>
             
-            <p>We received a request to reset your password for your Travel Clothing Club Admin account. If you made this request, click the button below to reset your password:</p>
+            <p>We received a request to reset your password for your Travel Clothing Club Partner account. If you made this request, click the button below to reset your password:</p>
             
             <div style="text-align: center;">
-                <a href="{{ $resetUrl }}" class="button">Reset Password</a>
+                <a href="{{ $resetUrl }}" class="button" style="color: white;">Reset Password</a>
             </div>
             
             <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px;">
                 {{ $resetUrl }}
             </p>
             
