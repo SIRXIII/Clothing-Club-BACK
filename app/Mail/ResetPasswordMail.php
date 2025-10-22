@@ -26,7 +26,7 @@ class ResetPasswordMail extends Mailable
     {
         $this->user = $user;
         $this->token = $token;
-        $this->resetUrl = env('FRONTEND_URL', 'https://travelclothingclub.com') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        $this->resetUrl = env('FRONTEND_URL', 'https://travelclothingclub.com') . 'reset-password?token=' . $token . '&email=' . urlencode($user->email);
     }
 
     /**
