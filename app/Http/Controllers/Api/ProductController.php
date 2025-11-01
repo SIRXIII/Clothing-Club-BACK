@@ -603,7 +603,17 @@ class ProductController extends Controller
             Storage::disk('hetzner')->put($storagePath, $imageContent);
             
             // Generate full URL for stored image
-            $fullUrl = config('filesystems.disks.hetzner.url') . '/' . $storagePath;
+            $hetznerUrl = env('HETZNER_S3_URL');
+            $bucket = env('HETZNER_S3_BUCKET');
+            
+            // Construct full URL based on Hetzner S3 configuration
+            if ($hetznerUrl) {
+                $fullUrl = rtrim($hetznerUrl, '/') . '/' . $storagePath;
+            } else {
+                // Fallback: construct from endpoint and bucket
+                $endpoint = env('HETZNER_S3_ENDPOINT');
+                $fullUrl = rtrim($endpoint, '/') . '/' . $bucket . '/' . $storagePath;
+            }
 
             // Step 5: If product_id is provided, save to database
             if ($request->filled('product_id')) {

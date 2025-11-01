@@ -16,6 +16,18 @@ FASHN_API_KEY=your_fashn_api_key_here
 # Model URLs for virtual try-on (Optional - defaults are provided)
 MALE_MODEL_URL=https://v3.fal.media/files/panda/jRavCEb1D4OpZBjZKxaH7_image_2024-12-08_18-37-27%20Large.jpeg
 FEMALE_MODEL_URL=https://v3.fal.media/files/panda/jRavCEb1D4OpZBjZKxaH7_image_2024-12-08_18-37-27%20Large.jpeg
+
+# Hetzner Storage Configuration (Required for full image URLs)
+HETZNER_S3_URL=https://your-bucket-name.your-region.hetzner-objects.com
+# OR if not using custom domain:
+# HETZNER_S3_URL will be constructed from HETZNER_S3_ENDPOINT and HETZNER_S3_BUCKET
+
+# Example:
+# HETZNER_S3_ENDPOINT=https://fsn1.your-storage.hetzner.cloud
+# HETZNER_S3_BUCKET=your-bucket-name
+# HETZNER_S3_KEY=your-access-key
+# HETZNER_S3_SECRET=your-secret-key
+# HETZNER_S3_REGION=eu-central-1
 ```
 
 ### 2. Get Fashn.ai API Key

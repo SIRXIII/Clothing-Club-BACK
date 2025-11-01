@@ -67,7 +67,9 @@ return [
         'region' => env('HETZNER_S3_REGION', 'eu-central-1'),
         'bucket' => env('HETZNER_S3_BUCKET'),
         'endpoint' => env('HETZNER_S3_ENDPOINT'),
+        'url' => env('HETZNER_S3_URL'),
         'use_path_style_endpoint' => true,
+        'visibility' => 'public',
     ],
 
 

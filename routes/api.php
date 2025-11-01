@@ -91,13 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Products
-    // ⚠️ Specific routes MUST come before resource routes
-    Route::post('/products/process-image', [ProductController::class, 'processImage']);
-    Route::post('/products/status-update', [ProductController::class, 'statusUpdate']);
-    Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete']);
-    
-    // Resource routes (must be last)
     Route::apiResource('/products', ProductController::class);
+    Route::post('/products/status-update', [ProductController::class, 'statusUpdate']);
+    Route::post('products/bulk-delete', [ProductController::class, 'bulkDelete']);
+    Route::post('/products/process-image', [ProductController::class, 'processImage']);
 
 
     // Orders
