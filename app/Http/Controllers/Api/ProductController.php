@@ -643,9 +643,10 @@ class ProductController extends Controller
                 'success' => true,
                 'message' => 'Image processed and stored successfully',
                 'processed_image' => [
-                    'url' => $fullUrl,
+                    'url' => $processedImageUrl, // Use CDN URL as primary (publicly accessible)
                     'path' => $storagePath,
-                    'original_api_url' => $processedImageUrl,
+                    'storage_url' => $fullUrl, // Hetzner URL as backup
+                    'original_api_url' => $processedImageUrl, // Keep for backward compatibility
                 ],
             ], 200);
 
