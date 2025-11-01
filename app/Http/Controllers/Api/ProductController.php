@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
 {
@@ -150,6 +151,7 @@ class ProductController extends Controller
                 'sku' => $validated['sku'],
                 'barcode' => $validated['barcode'],
                 'fit_category' => $validated['fitType'],
+                'gender' => $request->input('gender', 'Female'),
                 'chest' => $validated['chest'],
                 'length' => $validated['lengthType'],
                 'unit' => $validated['unit'],
@@ -160,6 +162,7 @@ class ProductController extends Controller
             ]);
 
 
+            // Handle regular uploaded images
             if ($request->hasFile('images')) {
                 $sortOrder = 0;
                 foreach ($request->file('images') as $i => $file) {
@@ -172,6 +175,23 @@ class ProductController extends Controller
                         'sort_order' => $sortOrder++,
                         'is_primary' => $i === 0 ? 1 : 0,
                     ]);
+                }
+            }
+
+            // Handle API processed images (already stored, just link to product)
+            if ($request->has('api_image_paths')) {
+                $apiImagePaths = $request->input('api_image_paths');
+                $sortOrder = ProductImage::where('product_id', $product->id)->max('sort_order') + 1;
+                $primaryExists = ProductImage::where('product_id', $product->id)->where('is_primary', true)->exists();
+
+                foreach ($apiImagePaths as $i => $path) {
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                        'sort_order' => $sortOrder++,
+                        'is_primary' => !$primaryExists && $i === 0 ? 1 : 0,
+                    ]);
+                    $primaryExists = true;
                 }
             }
 
@@ -294,6 +314,7 @@ class ProductController extends Controller
                 'sku' => $validated['sku'],
                 'barcode' => $validated['barcode'],
                 'fit_category' => $validated['fitType'],
+                'gender' => $request->input('gender', 'Female'),
                 'chest' => $validated['chest'],
                 'length' => $validated['lengthType'],
                 'unit' => $validated['sizeUnit'],
@@ -411,5 +432,225 @@ class ProductController extends Controller
     }
 }
 
+    /**
+     * Process image through third-party API and store in database
+     */
+    public function processImage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|max:10240', // 10MB max
+            'product_id' => 'nullable|exists:products,id',
+            'gender' => 'nullable|in:Male,Female',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Get the API key from environment
+            $apiKey = env('FASHN_API_KEY');
+            if (!$apiKey) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Third-party API key not configured',
+                ], 500);
+            }
+
+            // Convert image to base64
+            $image = $request->file('image');
+            $imageData = base64_encode(file_get_contents($image->getRealPath()));
+            $imageBase64 = 'data:' . $image->getMimeType() . ';base64,' . $imageData;
+
+            // Step 1: Verify API credits
+            Log::info('Checking API credits...');
+            $creditsResponse = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+            ])->get('https://api.fashn.ai/v1/credits');
+
+            if (!$creditsResponse->successful()) {
+                Log::error('API key verification failed', [
+                    'status' => $creditsResponse->status(),
+                    'response' => $creditsResponse->body(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid API key or API service unavailable',
+                ], 500);
+            }
+
+            $credits = $creditsResponse->json();
+            Log::info('Available credits', ['credits' => $credits]);
+
+            if (isset($credits['credits']['total']) && $credits['credits']['total'] <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No API credits available',
+                ], 500);
+            }
+
+            // Step 2: Submit the prediction job
+            $gender = $request->input('gender', 'Female');
+            $modelImage = $gender === 'Male' 
+                ? env('MALE_MODEL_URL', 'https://v3.fal.media/files/panda/jRavCEb1D4OpZBjZKxaH7_image_2024-12-08_18-37-27%20Large.jpeg')
+                : env('FEMALE_MODEL_URL', 'https://v3.fal.media/files/panda/jRavCEb1D4OpZBjZKxaH7_image_2024-12-08_18-37-27%20Large.jpeg');
+
+            Log::info('Submitting prediction job...');
+            $runResponse = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey,
+            ])->post('https://api.fashn.ai/v1/run', [
+                'model_name' => 'tryon-v1.6',
+                'inputs' => [
+                    'model_image' => $modelImage,
+                    'garment_image' => $imageBase64,
+                ],
+            ]);
+
+            if (!$runResponse->successful()) {
+                Log::error('Failed to start prediction', [
+                    'status' => $runResponse->status(),
+                    'response' => $runResponse->body(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process image',
+                    'details' => $runResponse->json(),
+                ], 500);
+            }
+
+            $runData = $runResponse->json();
+            $predictionId = $runData['id'] ?? null;
+
+            if (!$predictionId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No prediction ID returned from API',
+                ], 500);
+            }
+
+            Log::info('Prediction started', ['prediction_id' => $predictionId]);
+
+            // Step 3: Poll for the result
+            $maxAttempts = 30; // 90 seconds max
+            $attempts = 0;
+            $processedImageUrl = null;
+
+            while ($attempts < $maxAttempts) {
+                sleep(3); // Wait 3 seconds between polls
+
+                $statusResponse = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                ])->get("https://api.fashn.ai/v1/status/{$predictionId}");
+
+                if (!$statusResponse->successful()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to check processing status',
+                    ], 500);
+                }
+
+                $statusData = $statusResponse->json();
+                $status = $statusData['status'] ?? 'unknown';
+
+                Log::info('Processing status', ['status' => $status, 'attempt' => $attempts + 1]);
+
+                if ($status === 'completed') {
+                    $processedImageUrl = $statusData['output'][0] ?? null;
+                    if ($processedImageUrl) {
+                        break;
+                    }
+                }
+
+                if ($status === 'failed') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Image processing failed',
+                        'details' => $statusData['error'] ?? 'Unknown error',
+                    ], 500);
+                }
+
+                if (in_array($status, ['starting', 'in_queue', 'processing'])) {
+                    $attempts++;
+                    continue;
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unknown processing status: ' . $status,
+                ], 500);
+            }
+
+            if (!$processedImageUrl) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image processing timed out after 90 seconds',
+                ], 500);
+            }
+
+            // Step 4: Download and store the processed image
+            Log::info('Downloading processed image', ['url' => $processedImageUrl]);
+            
+            $imageContent = Http::get($processedImageUrl)->body();
+            $fileName = 'processed_' . time() . '_' . Str::random(10) . '.jpg';
+            $storagePath = 'product/processed/' . $fileName;
+            
+            // Store to Hetzner storage
+            Storage::disk('hetzner')->put($storagePath, $imageContent);
+            
+            // Generate full URL for stored image
+            $fullUrl = config('filesystems.disks.hetzner.url') . '/' . $storagePath;
+
+            // Step 5: If product_id is provided, save to database
+            if ($request->filled('product_id')) {
+                $product = Product::find($request->product_id);
+                
+                if ($product) {
+                    $sortOrder = ProductImage::where('product_id', $product->id)->max('sort_order') + 1;
+                    $primaryExists = ProductImage::where('product_id', $product->id)
+                        ->where('is_primary', true)
+                        ->exists();
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $storagePath,
+                        'sort_order' => $sortOrder,
+                        'is_primary' => !$primaryExists,
+                    ]);
+
+                    Log::info('Processed image saved to product', [
+                        'product_id' => $product->id,
+                        'image_path' => $storagePath,
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image processed and stored successfully',
+                'processed_image' => [
+                    'url' => $fullUrl,
+                    'path' => $storagePath,
+                    'original_api_url' => $processedImageUrl,
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Image processing error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process image',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 }

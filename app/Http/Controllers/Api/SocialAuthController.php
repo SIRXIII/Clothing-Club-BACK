@@ -80,7 +80,7 @@ class SocialAuthController extends Controller
 
             // Return HTML page that will post message to parent window (for popup flow)
             // or redirect to frontend for direct flow
-            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-admin.online');
+            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-partner.online');
 
             return response()->view('oauth-callback', [
                 'token' => $token,
@@ -91,7 +91,7 @@ class SocialAuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-admin.online');
+            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-partner.online');
 
             return response()->view('oauth-callback', [
                 'error' => $e->getMessage(),
@@ -118,11 +118,11 @@ class SocialAuthController extends Controller
             $token = $user->createToken("{$provider}-login")->plainTextToken;
 
             // Redirect to frontend with token and success status
-            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-admin.online');
+            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-partner.online');
             return redirect("{$frontendUrl}/oauth/callback?token={$token}&login=success&provider={$provider}");
 
         } catch (\Exception $e) {
-            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-admin.online');
+            $frontendUrl = env('FRONTEND_URL', 'https://travelclothingclub-partner.online');
             return redirect("{$frontendUrl}/login?error=" . urlencode($e->getMessage()));
         }
     }

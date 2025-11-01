@@ -20,7 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://travelclothingclub-admin.online',
+        'https://travelclothingclub-partner.online',
         'http://localhost:3000',
         'http://localhost:5173',
         '*'

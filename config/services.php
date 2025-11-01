@@ -38,19 +38,19 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-admin.online') . '/social/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-partner.online') . '/social/google/callback'),
     ],
 
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect' => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-admin.online') . '/api/social/facebook/callback'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-partner.online') . '/api/social/facebook/callback'),
     ],
 
     'shopify' => [
         'client_id' => env('SHOPIFY_CLIENT_ID'),
         'client_secret' => env('SHOPIFY_CLIENT_SECRET'),
-        'redirect' => env('SHOPIFY_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-admin.online') . '/api/social/shopify/callback'),
+        'redirect' => env('SHOPIFY_REDIRECT_URI', env('APP_URL', 'https://travelclothingclub-partner.online') . '/api/social/shopify/callback'),
     ],
 
     

@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/products', ProductController::class);
     Route::post('/products/status-update', [ProductController::class, 'statusUpdate']);
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDelete']);
+    Route::post('/products/process-image', [ProductController::class, 'processImage']);
 
 
     // Orders
