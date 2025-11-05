@@ -31,7 +31,8 @@ class SupportMessageController extends Controller
     {
         // Load ticket with messages + senderable for each message
         $ticket = SupportTicket::with(['messages.senderable', 'order', 'user'])
-            ->findOrFail($ticketId);
+            ->where('ticket_id', $ticketId)
+            ->firstOrFail();
 
         return $this->success(
             new SupportTicketResource($ticket),
@@ -45,10 +46,11 @@ class SupportMessageController extends Controller
 
     public function store(Request $request, NotificationService $notify)
     {
-
+        // Find the ticket by ticket_id and get its primary key (id)
+        $ticket = SupportTicket::where('ticket_id', $request->ticket_id)->firstOrFail();
 
         $message = SupportMessage::create([
-            'support_ticket_id' => $request->ticket_id,
+            'support_ticket_id' => $ticket->id,
             'senderable_id' => auth()->id(),
             'senderable_type' => get_class(auth()->user()),
             'message' => $request->message,
@@ -66,7 +68,10 @@ class SupportMessageController extends Controller
 
     public function fetchMessages($ticketId)
     {
-        $messages = SupportMessage::where('support_ticket_id', $ticketId)
+        // Find the ticket by ticket_id and get its primary key (id)
+        $ticket = SupportTicket::where('ticket_id', $ticketId)->firstOrFail();
+        
+        $messages = SupportMessage::where('support_ticket_id', $ticket->id)
             ->with('senderable')
             ->orderBy('created_at', 'asc')
             ->get();
