@@ -166,8 +166,8 @@ class ProductController extends Controller
             if ($request->hasFile('images')) {
                 $sortOrder = 0;
                 foreach ($request->file('images') as $i => $file) {
-
-                    $path = $file->store('product/images', 'hetzner');
+                    // Store in product-specific folder
+                    $path = $file->store("product/images/{$product->id}", 'hetzner');
 
                     ProductImage::create([
                         'product_id' => $product->id,
@@ -196,8 +196,8 @@ class ProductController extends Controller
             }
 
             if ($request->hasFile('video_file')) {
-
-                $path = $request->file('video_file')->store('product/videos', 'hetzner');
+                // Store in product-specific folder
+                $path = $request->file('video_file')->store("product/videos/{$product->id}", 'hetzner');
 
                 ProductVideo::create([
                     'product_id' => $product->id,
@@ -325,59 +325,58 @@ class ProductController extends Controller
             ]);
 
 
-            $keepImages = $validated['keep_images'] ?? [];
-            $existingImages = ProductImage::where('product_id', $product->id)
-                ->whereIn('id', $keepImages)
-                ->get();
-
-            ProductImage::where('product_id', $product->id)
-                ->whereNotIn('id', $keepImages)
-                ->delete();
-
-            ProductImage::where('product_id', $product->id)
-                ->update(['is_primary' => false]);
-
-            if ($existingImages->count()) {
-                $primaryExists = $existingImages->where('is_primary', true)->first();
-                if (!$primaryExists) {
-                    $firstImage = $existingImages->first();
-                    $firstImage->update(['is_primary' => true]);
-                }
-            }
-
+            // Handle images update
             if ($request->hasFile('images')) {
+                // Delete old images from storage and database
+                $oldImages = ProductImage::where('product_id', $product->id)->get();
+                foreach ($oldImages as $oldImage) {
+                    if (Storage::disk('hetzner')->exists($oldImage->image_path)) {
+                        Storage::disk('hetzner')->delete($oldImage->image_path);
+                    }
+                }
+                // Delete all old image records
+                ProductImage::where('product_id', $product->id)->delete();
 
-                $primaryExists = ProductImage::where('product_id', $product->id)
-                    ->where('is_primary', true)
-                    ->exists();
-
-                $sortOrder = ProductImage::where('product_id', $product->id)->max('sort_order') + 1;
-
+                // Upload new images to product-specific folder
+                $sortOrder = 0;
                 foreach ($request->file('images') as $i => $file) {
-                    $path = $file->store('product/images', 'hetzner');
+                    $path = $file->store("product/images/{$product->id}", 'hetzner');
 
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
                         'sort_order' => $sortOrder++,
-                        'is_primary' => $primaryExists ? false : ($i === 0),
+                        'is_primary' => $i === 0,
                     ]);
-
-                    $primaryExists = true;
                 }
             }
 
             if ($request->hasFile('video_file')) {
-
+                // Delete old videos from storage and database
+                $oldVideos = ProductVideo::where('product_id', $product->id)->get();
+                foreach ($oldVideos as $oldVideo) {
+                    if ($oldVideo->video_path && Storage::disk('hetzner')->exists($oldVideo->video_path)) {
+                        Storage::disk('hetzner')->delete($oldVideo->video_path);
+                    }
+                }
                 ProductVideo::where('product_id', $product->id)->delete();
 
-                $path = $request->file('video_file')->store('product/videos', 'hetzner');
+                // Store in product-specific folder
+                $path = $request->file('video_file')->store("product/videos/{$product->id}", 'hetzner');
                 ProductVideo::create([
                     'product_id' => $product->id,
                     'video_path' => $path,
                     'video_url' => null,
                 ]);
             } elseif ($request->filled('video_url')) {
+                // Delete old video files but keep video_url entries
+                $oldVideos = ProductVideo::where('product_id', $product->id)->whereNotNull('video_path')->get();
+                foreach ($oldVideos as $oldVideo) {
+                    if (Storage::disk('hetzner')->exists($oldVideo->video_path)) {
+                        Storage::disk('hetzner')->delete($oldVideo->video_path);
+                    }
+                }
+                
                 ProductVideo::updateOrCreate(
                     ['product_id' => $product->id],
                     ['video_path' => null, 'video_url' => $request->video_url]
