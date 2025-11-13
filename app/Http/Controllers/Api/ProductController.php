@@ -111,8 +111,8 @@ class ProductController extends Controller
             'status' => 'required|string|max:100',
             'note' => 'nullable|string|max:1000',
             'unit' => 'required',
-            'images.*' => 'required|image|max:5120',
-            'video' => 'nullable|mimes:mp4,mov,avi,webm|max:51200',
+            'images.*' => 'required|image|max:512000',
+            'video' => 'nullable|mimes:mp4,mov,avi,webm|max:512000',
             'video_url' => 'nullable|url|max:1000',
         ]);
 
@@ -275,8 +275,8 @@ class ProductController extends Controller
             'status' => 'required|string|max:100',
             'note' => 'nullable|string|max:1000',
             'sizeUnit' => 'required',
-            'images.*' => 'nullable|image|max:5120',
-            'video_file' => 'nullable|mimes:mp4,mov,avi,webm|max:51200',
+            'images.*' => 'nullable|image|max:512000',
+            'video_file' => 'nullable|mimes:mp4,mov,avi,webm|max:512000',
             'video_url' => 'nullable|url|max:1000',
             'keep_images' => 'array', // IDs of images you want to keep
         ]);
