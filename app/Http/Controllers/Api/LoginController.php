@@ -87,7 +87,13 @@ class LoginController extends Controller
 
 
         if ($request->hasFile('profile_photo')) {
-            $path = $request->file('profile_photo')->store('partners/profile', 'hetzner');
+            // Delete old profile photo from storage
+            if ($user->profile_photo && Storage::disk('hetzner')->exists($user->profile_photo)) {
+                Storage::disk('hetzner')->delete($user->profile_photo);
+            }
+            
+            // Store in partner-specific folder
+            $path = $request->file('profile_photo')->store("partners/profile/{$user->id}", 'hetzner');
             $user->profile_photo = $path;
         }
 

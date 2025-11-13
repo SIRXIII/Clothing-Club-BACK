@@ -144,14 +144,20 @@ class PartnerController extends Controller
 
 
         if ($request->hasFile('profileImage')) {
-            $path = $request->file('profileImage')->store('partners/profile', 'hetzner');
+            // Delete old profile photo from storage
+            if ($partner->profile_photo && Storage::disk('hetzner')->exists($partner->profile_photo)) {
+                Storage::disk('hetzner')->delete($partner->profile_photo);
+            }
+            
+            // Store in partner-specific folder
+            $path = $request->file('profileImage')->store("partners/profile/{$partner->id}", 'hetzner');
 
             $partner->update(['profile_photo' => $path]);
         }
 
         if ($request->hasFile('license_front')) {
-
-            $path = $request->file('license_front')->store('partners/licenses', 'hetzner');
+            // Store in partner-specific folder
+            $path = $request->file('license_front')->store("partners/licenses/{$partner->id}", 'hetzner');
             PartnerDocument::create([
                 'partner_id' => $partner->id,
                 'type'       => 'license',
@@ -161,8 +167,8 @@ class PartnerController extends Controller
         }
 
         if ($request->hasFile('license_back')) {
-
-            $path = $request->file('license_back')->store('partners/licenses', 'hetzner');
+            // Store in partner-specific folder
+            $path = $request->file('license_back')->store("partners/licenses/{$partner->id}", 'hetzner');
             PartnerDocument::create([
                 'partner_id' => $partner->id,
                 'type'       => 'license',
@@ -174,7 +180,8 @@ class PartnerController extends Controller
 
         if ($request->hasFile('ownerId_front')) {
 
-            $path = $request->file('ownerId_front')->store('partners/owner_ids', 'hetzner');
+            // Store in partner-specific folder
+            $path = $request->file('ownerId_front')->store("partners/owner_ids/{$partner->id}", 'hetzner');
             PartnerDocument::create([
                 'partner_id' => $partner->id,
                 'type'       => 'owner_id',
@@ -184,7 +191,8 @@ class PartnerController extends Controller
         }
 
         if ($request->hasFile('ownerId_back')) {
-            $path = $request->file('ownerId_back')->store('partners/owner_ids', 'hetzner');
+            // Store in partner-specific folder
+            $path = $request->file('ownerId_back')->store("partners/owner_ids/{$partner->id}", 'hetzner');
             PartnerDocument::create([
                 'partner_id' => $partner->id,
                 'type'       => 'owner_id',
