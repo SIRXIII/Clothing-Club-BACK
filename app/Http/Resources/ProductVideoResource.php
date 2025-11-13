@@ -15,12 +15,33 @@ class ProductVideoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Helper function to generate full URL with bucket name
+        $getHetznerUrl = function($path) {
+            if (!$path) return null;
+            
+            $endpoint = env('HETZNER_S3_ENDPOINT', 'https://fsn1.your-objectstorage.com');
+            $bucket = env('HETZNER_S3_BUCKET', 'tcc-media');
+            
+            // Check if path already contains bucket name (already full URL)
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path; // Already a full URL
+            }
+            
+            // Check if path already starts with bucket name
+            if (str_starts_with($path, $bucket . '/')) {
+                return "{$endpoint}/{$path}";
+            }
+            
+            // Build full URL with bucket
+            return "{$endpoint}/{$bucket}/{$path}";
+        };
+
          return [
             'id'         => $this->id,
             'product_id' => $this->product_id,
-            'video_path' => $this->video_path ? Storage::disk('hetzner')->url($this->video_path) : null,
+            'video_path' => $getHetznerUrl($this->video_path),
             'video_url'  => $this->video_url,
-            'thumbnail'  => $this->thumbnail ? url($this->thumbnail) : null,
+            'thumbnail'  => $this->thumbnail ? $getHetznerUrl($this->thumbnail) : null,
         ];
     }
 }

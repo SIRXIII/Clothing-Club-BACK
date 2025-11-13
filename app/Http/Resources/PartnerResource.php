@@ -16,9 +16,30 @@ class PartnerResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Helper function to generate full URL with bucket name
+        $getHetznerUrl = function($path) {
+            if (!$path) return null;
+            
+            $endpoint = env('HETZNER_S3_ENDPOINT', 'https://fsn1.your-objectstorage.com');
+            $bucket = env('HETZNER_S3_BUCKET', 'tcc-media');
+            
+            // Check if path already contains bucket name (already full URL)
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path; // Already a full URL
+            }
+            
+            // Check if path already starts with bucket name
+            if (str_starts_with($path, $bucket . '/')) {
+                return "{$endpoint}/{$path}";
+            }
+            
+            // Build full URL with bucket
+            return "{$endpoint}/{$bucket}/{$path}";
+        };
+
         return [
             'id' => $this->id,
-            'profile_photo' => $this->profile_photo ? Storage::disk('hetzner')->url($this->profile_photo) : null,
+            'profile_photo' => $getHetznerUrl($this->profile_photo),
             'business_name' => $this->business_name,
             'name' => $this->name,
             'email' => $this->email,
@@ -44,20 +65,16 @@ class PartnerResource extends JsonResource
             'type' => "Partner",
             'two_factor_secret' => !empty($this->two_factor_secret) ? true : false,
             'documents' => [
-                'license' => $this->documents()->where('type', 'license')->get()->map(function ($doc) {
+                'license' => $this->documents()->where('type', 'license')->get()->map(function ($doc) use ($getHetznerUrl) {
                     return [
                         'side' => $doc->side,
-                        'file_path' => $doc->file_path
-                            ? Storage::disk('hetzner')->url($doc->file_path)
-                            : null,
+                        'file_path' => $getHetznerUrl($doc->file_path),
                     ];
                 }),
-                'owner_id_card' => $this->documents()->where('type', 'owner_id_card')->get()->map(function ($doc) {
+                'owner_id_card' => $this->documents()->where('type', 'owner_id_card')->get()->map(function ($doc) use ($getHetznerUrl) {
                     return [
                         'side' => $doc->side,
-                        'file_path' => $doc->file_path
-                            ? Storage::disk('hetzner')->url($doc->file_path)
-                            : null,
+                        'file_path' => $getHetznerUrl($doc->file_path),
                     ];
                 }),
             ],

@@ -17,6 +17,27 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Helper function to generate full URL with bucket name
+        $getHetznerUrl = function($path) {
+            if (!$path) return null;
+            
+            $endpoint = env('HETZNER_S3_ENDPOINT', 'https://fsn1.your-objectstorage.com');
+            $bucket = env('HETZNER_S3_BUCKET', 'tcc-media');
+            
+            // Check if path already contains bucket name (already full URL)
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path; // Already a full URL
+            }
+            
+            // Check if path already starts with bucket name
+            if (str_starts_with($path, $bucket . '/')) {
+                return "{$endpoint}/{$path}";
+            }
+            
+            // Build full URL with bucket
+            return "{$endpoint}/{$bucket}/{$path}";
+        };
+
         return [
             'id'                => $this->id,
             'product_id'        => "PRD-" . $this->id,
@@ -57,8 +78,8 @@ class ProductResource extends JsonResource
             'created_at'        => $this->created_at,
             'updated_at'        => $this->updated_at,
             'primary_image'     => $this->primaryImage
-                ? Storage::disk('hetzner')->url($this->primaryImage->image_path)
-                : ($this->images->first() ? Storage::disk('hetzner')->url($this->images->first()->image_path) : null),
+                ? $getHetznerUrl($this->primaryImage->image_path)
+                : ($this->images->first() ? $getHetznerUrl($this->images->first()->image_path) : null),
             'images'            => ProductImageResource::collection($this->whenLoaded('images')),
             'videos'           => ProductVideoResource::collection($this->whenLoaded('videos')),
 
