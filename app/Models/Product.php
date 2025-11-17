@@ -26,6 +26,11 @@ class Product extends Model
         return $this->hasMany(ProductVideo::class);
     }
 
+    public function sizes()
+    {
+        return $this->hasMany(ProductSize::class);
+    }
+
     public function rentals()
     {
         return $this->hasMany(Rental::class);

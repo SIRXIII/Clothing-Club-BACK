@@ -82,6 +82,15 @@ class ProductResource extends JsonResource
                 : ($this->images->first() ? $getHetznerUrl($this->images->first()->image_path) : null),
             'images'            => ProductImageResource::collection($this->whenLoaded('images')),
             'videos'           => ProductVideoResource::collection($this->whenLoaded('videos')),
+            'sizes'            => $this->whenLoaded('sizes', function () {
+                return $this->sizes->map(function ($size) {
+                    return [
+                        'id' => $size->id,
+                        'size' => $size->size,
+                        'quantity' => $size->quantity,
+                    ];
+                });
+            }) ?? ($this->relationLoaded('sizes') ? [] : null),
 
 
             'rental_stats' => $this->type === 'rental' ? [

@@ -7,6 +7,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVideo;
+use App\Models\ProductSize;
 use App\Trait\ApiResponse;
 use BaconQrCode\Encoder\QrCode;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class ProductController extends Controller
     {
         $partner = auth()->user()->id;
         try {
-            $products = Product::with(['images', 'videos', 'partner', 'ratings'])->where('partner_id', $partner)->get();
+            $products = Product::with(['images', 'videos', 'partner', 'ratings', 'sizes'])->where('partner_id', $partner)->get();
             return $this->success(ProductResource::collection($products), 'Products retrieved successfully', 200);
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve products: ' . $e->getMessage(), 500);
@@ -60,7 +61,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with('images', 'videos', 'partner')->find($id);
+            $product = Product::with('images', 'videos', 'partner', 'sizes')->find($id);
 
             if (!$product) {
                 return $this->error('Product not found', 404);
@@ -213,10 +214,22 @@ class ProductController extends Controller
                 ]);
             }
 
+            // Handle product sizes with quantities
+            if ($request->has('sizes') && is_array($request->sizes)) {
+                foreach ($request->sizes as $sizeData) {
+                    if (isset($sizeData['size']) && isset($sizeData['quantity'])) {
+                        ProductSize::create([
+                            'product_id' => $product->id,
+                            'size' => $sizeData['size'],
+                            'quantity' => (int) $sizeData['quantity'],
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 
-            $product->load('images', 'videos');
+            $product->load('images', 'videos', 'sizes');
 
             return response()->json([
                 'message' => 'Product created successfully',
@@ -383,9 +396,26 @@ class ProductController extends Controller
                 );
             }
 
+            // Handle product sizes with quantities
+            if ($request->has('sizes') && is_array($request->sizes)) {
+                // Delete existing sizes
+                ProductSize::where('product_id', $product->id)->delete();
+                
+                // Create new sizes
+                foreach ($request->sizes as $sizeData) {
+                    if (isset($sizeData['size']) && isset($sizeData['quantity'])) {
+                        ProductSize::create([
+                            'product_id' => $product->id,
+                            'size' => $sizeData['size'],
+                            'quantity' => (int) $sizeData['quantity'],
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
-            $product->load('images', 'videos');
+            $product->load('images', 'videos', 'sizes');
 
             return response()->json([
                 'message' => 'Product updated successfully',
