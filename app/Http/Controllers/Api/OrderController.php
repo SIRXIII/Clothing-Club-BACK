@@ -20,7 +20,16 @@ class OrderController extends Controller
     {
         $partnerId = auth()->user()->id;
         try {
-            $orders = Order::where('partner_id', $partnerId)->with(['items', 'partner', 'traveler', 'rider', 'complaints'])->get();
+            $orders = Order::where('partner_id', $partnerId)
+                ->with([
+                    'items.product.primaryImage',
+                    'items.product.images',
+                    'partner',
+                    'traveler',
+                    'rider',
+                    'complaints'
+                ])
+                ->get();
             return $this->success(OrderResource::collection($orders), 'Orders retrieved successfully', 200);
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve orders: ' . $e->getMessage(), 500);
@@ -33,7 +42,15 @@ class OrderController extends Controller
     public function show($id)
     {
         try {
-            $order = Order::with(['items', 'partner', 'traveler', 'rider', 'complaints', 'traveler.addresses'])->find($id);
+            $order = Order::with([
+                'items.product.primaryImage',
+                'items.product.images',
+                'partner',
+                'traveler',
+                'rider',
+                'complaints',
+                'traveler.addresses'
+            ])->find($id);
 
             if (!$order) {
                 return $this->error('Partner not found', 404);
@@ -65,6 +82,16 @@ class OrderController extends Controller
         $order->rider_id = $request->rider_id;
         $order->status = 'processing';
         $order->save();
+
+        // Reload with relationships
+        $order->load([
+            'items.product.primaryImage',
+            'items.product.images',
+            'partner',
+            'traveler',
+            'rider',
+            'complaints'
+        ]);
 
         return $this->success(new OrderResource($order), 'Rider assigned successfully', 200);
     }

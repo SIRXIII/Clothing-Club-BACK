@@ -90,7 +90,7 @@ class ProductResource extends JsonResource
                         'quantity' => $size->quantity,
                     ];
                 });
-            }) ?? ($this->relationLoaded('sizes') ? [] : null),
+            }),
 
 
             'rental_stats' => $this->type === 'rental' ? [
